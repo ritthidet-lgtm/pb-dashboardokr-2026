@@ -1,4 +1,4 @@
-<!DOCTYPE html>\n<html lang="th"><head></head><body>\n\n\n\n\n\n\n\n
+<!DOCTYPE html>\n<html lang="th"><head></head><body>\n\n\n\n\n\n\n\n\n
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PB Mechanical Maintenance - OKR Dashboard</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -391,7 +391,7 @@
                     
                     <!-- ข้อความเป้าหมายรอง พิมพ์แก้ไขได้ -->
         <div style="font-size: 15px; color: #d35400; font-weight: bold; margin-bottom: 12px; padding-left: 25px;">
-            📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์เป้าหมาย">ควบคุมให้มีบอร์ด LG Press &le; 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง</span>
+            📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์เป้าหมาย">ควบคุมให้มีบอร์ด LG Press ≤ 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง</span>
         </div>
 
        <!-- 🌟 เพิ่มกล่องสีฟ้า All Group สำหรับ OKR 2 (ตั้ง ID เป็น _2) 🌟 -->
@@ -425,15 +425,51 @@
 
 
             <!-- ซ่อนกล่อง KR ย่อยไว้ก่อน -->
-            <div class="kr-section" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 8px;">
-                <div style="text-align: center; color: #7f8c8d; margin-bottom: 15px;">ยังไม่มี KR ย่อยสำหรับหัวข้อนี้</div>
-                <button class="btn btn-add" style="background-color: #3498db; width: 100%;" onclick="alert('ฟังก์ชันเพิ่ม KR ย่อยกำลังตามมาครับ!')">➕ เพิ่ม KR ย่อย</button>
+            <div class="kr-section" style="display: block; background: rgb(248, 249, 250); padding: 20px; border-radius: 8px;">
+                
+                <div class="kr-item kr-yellow">
+            <div class="kr-header-row">
+                <!-- ชื่อ KR พิมพ์แก้ไขได้ -->
+                <span class="kr-name-text" contenteditable="true" style="outline: none; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์ชื่อ KR">KR1 ปรับปรุงการตรวจเช็คเครื่องจักร After press ประจำวัน</span>
+                
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="font-size: 13px; color: #555;">ความมั่นใจ (0-10):</label>
+                    <!-- ตัวเลขความมั่นใจ ดึงฟังก์ชัน updateKRColor เดิมมาใช้เปลี่ยนสี -->
+                    <input type="number" class="kr-conf" min="0" max="10" value="6" oninput="updateKRColor(this)">
+                    
+                    <!-- ปุ่มรายละเอียด -->
+                    <button class="btn btn-detail" style="padding: 6px 12px;" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+                    
+                    <!-- ปุ่มลบ (ถาม 1 ชั้น) -->
+                    <span style="cursor: pointer; font-size: 16px; margin-left: 8px; opacity: 0.7;" title="ลบ KR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ต้องการลบ KR นี้ใช่หรือไม่?')) this.closest('.kr-item').remove();">🗑️</span>
+                </div>
+            </div>
+        </div><div class="kr-item kr-red">
+            <div class="kr-header-row">
+                <!-- ชื่อ KR พิมพ์แก้ไขได้ -->
+                <span class="kr-name-text" contenteditable="true" style="outline: none; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์ชื่อ KR">KR2 การซ่อมบำรุง Stack Emer ให้กลับมาใช้งานได้ปกติ</span>
+                
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="font-size: 13px; color: #555;">ความมั่นใจ (0-10):</label>
+                    <!-- ตัวเลขความมั่นใจ ดึงฟังก์ชัน updateKRColor เดิมมาใช้เปลี่ยนสี -->
+                    <input type="number" class="kr-conf" min="0" max="10" value="3" oninput="updateKRColor(this)">
+                    
+                    <!-- ปุ่มรายละเอียด -->
+                    <button class="btn btn-detail" style="padding: 6px 12px;" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+                    
+                    <!-- ปุ่มลบ (ถาม 1 ชั้น) -->
+                    <span style="cursor: pointer; font-size: 16px; margin-left: 8px; opacity: 0.7;" title="ลบ KR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ต้องการลบ KR นี้ใช่หรือไม่?')) this.closest('.kr-item').remove();">🗑️</span>
+                </div>
+            </div>
+        </div><button class="btn btn-add" style="background-color: #3498db; width: 100%; margin-top: 10px;" onclick="addKR(this)">➕ เพิ่ม KR ย่อย</button>
             </div>
         </div>
         
         
         </div>
-</div>
+
+        
+        </div>
 
 <!-- ปุ่มเพิ่ม OKR ใหม่ -->
     <button class="btn btn-add" style="width: 100%; padding: 15px; font-size: 16px; background-color: #34495e; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; margin-bottom: 30px;" onclick="addNewOKR()">
@@ -482,6 +518,48 @@
             item.classList.add('kr-green');
         }
     }
+
+        // ฟังก์ชันสำหรับเพิ่ม KR ย่อยใหม่
+    function addKR(btn) {
+        // หาโซนพื้นที่ของ KR Section นั้นๆ
+        let krSection = btn.closest('.kr-section');
+        
+        // ถ้ามีข้อความ "ยังไม่มี KR ย่อย" ให้ลบทิ้งไปเลย
+        let emptyText = krSection.querySelector('div[style*="text-align: center"]');
+        if (emptyText) emptyText.remove();
+
+        // สร้างกล่อง KR ใหม่
+        let newKR = document.createElement('div');
+        // ค่าเริ่มต้นความมั่นใจ 5 เลยให้เป็นกล่องสีเหลือง (kr-yellow)
+        newKR.className = 'kr-item kr-yellow'; 
+        
+        // ใส่โครงสร้าง HTML ของกล่อง KR
+        newKR.innerHTML = `
+            <div class="kr-header-row">
+                <!-- ชื่อ KR พิมพ์แก้ไขได้ -->
+                <span class="kr-name-text" contenteditable="true" style="outline: none; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์ชื่อ KR">KR ใหม่... (คลิกเพื่อแก้ไขชื่อ)</span>
+                
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="font-size: 13px; color: #555;">ความมั่นใจ (0-10):</label>
+                    <!-- ตัวเลขความมั่นใจ ดึงฟังก์ชัน updateKRColor เดิมมาใช้เปลี่ยนสี -->
+                    <input type="number" class="kr-conf" min="0" max="10" value="5" oninput="updateKRColor(this)">
+                    
+                    <!-- ปุ่มรายละเอียด -->
+                    <button class="btn btn-detail" style="padding: 6px 12px;" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+                    
+                    <!-- ปุ่มลบ (ถาม 1 ชั้น) -->
+                    <span style="cursor: pointer; font-size: 16px; margin-left: 8px; opacity: 0.7;" title="ลบ KR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ต้องการลบ KR นี้ใช่หรือไม่?')) this.closest('.kr-item').remove();">🗑️</span>
+                </div>
+            </div>
+        `;
+        
+        // สั่งให้แทรกกล่อง KR ใหม่นี้ ไว้ "ข้างบน" ปุ่ม ➕ เพิ่ม KR ย่อย
+        krSection.insertBefore(newKR, btn);
+    }
+
+
+
+
 
     function exportHTML() {
         let htmlContent = "<!DOCTYPE html>\\n" + document.documentElement.outerHTML;
@@ -721,4 +799,4 @@
 </script>
 
 
-</body></html>
+</div></body></html>
