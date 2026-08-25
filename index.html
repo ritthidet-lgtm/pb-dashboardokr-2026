@@ -497,124 +497,94 @@
         alert("ดาวน์โหลดไฟล์เสร็จแล้ว! นำไฟล์นี้ไปวางทับไฟล์เดิมได้เลยครับ");
     }
 
-    // 🌟 ระบบดึงข้อมูลจาก Local Storage (Raw Data) 🌟
-    let bdChartInstance = null; // ตัวแปรสำหรับเก็บกราฟ
+   // 🌟 ระบบดึงข้อมูลแบบใหม่ (ดึงไฟล์ตรงๆ ไม่ง้อ Local Storage) 🌟
+    let bdChartInstance = null; 
 
-    // เพิ่มตัวแปร isAutoLoad เข้ามา เพื่อเช็คว่าเป็นการโหลดอัตโนมัติหรือไม่
-    function syncData(isAutoLoad = false) {
-        let allDataStr = localStorage.getItem('pb_raw_data_all');
-        let ytdDataStr = localStorage.getItem('pb_raw_data_ytd'); 
-        
-        if(!allDataStr) {
-            // ถ้าเป็นการโหลดอัตโนมัติ จะไม่เด้งแจ้งเตือนกวนใจ
-            if(!isAutoLoad) alert("ไม่พบข้อมูล! กรุณาไปที่หน้า 'อัปเดต Raw data' แล้วกดปุ่มบันทึกข้อมูลก่อนครับ");
-            return;
-        }
-
-        // --- ส่วนที่ 1: อัปเดตตัวเลขในกล่อง KR ---
-        if(ytdDataStr) {
-            let data = JSON.parse(ytdDataStr);
+    async function syncData(isAutoLoad = false) {
+        try {
+            let response = await fetch('raw_data.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error("ไม่พบไฟล์ raw_data.html");
+            let htmlText = await response.text();
             
-            if(data['All group']) {
-                document.getElementById('ag_bd').innerText = data['All group'].bd;
-                document.getElementById('ag_diff').innerText = data['All group'].diff;
-                document.getElementById('ag_baht').innerText = data['All group'].baht;
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(htmlText, 'text/html');
+
+            let allGroupRow = doc.querySelector('tr[data-quarter="ytd"][data-index="10"]'); 
+            if(allGroupRow) {
+                document.getElementById('ag_bd').innerText = allGroupRow.querySelector('.out-pct-breakdown').innerText;
+                document.getElementById('ag_diff').innerText = allGroupRow.querySelector('.out-pct-diff').innerText;
+                document.getElementById('ag_baht').innerText = allGroupRow.querySelector('.out-baht-m3').innerText;
             }
 
-            const machines = ["Chipper", "Pz-Flaker", "Dryer", "Screen", "Energy", "Glue Blender", "Forming", "Press", "After press"];
+            const machines = [
+                { id: "Chipper", idx: "0" }, { id: "Pz-Flaker", idx: "1" }, { id: "Dryer", idx: "2" },
+                { id: "Screen", idx: "3" }, { id: "Energy", idx: "4" }, { id: "Glue Blender", idx: "5" },
+                { id: "Forming", idx: "6" }, { id: "Press", idx: "7" }, { id: "After press", idx: "8" }
+            ];
+
             machines.forEach(m => {
-                if(data[m]) {
-                    let bdElem = document.getElementById('bd_' + m);
-                    let diffElem = document.getElementById('diff_' + m);
-                    let bahtElem = document.getElementById('baht_' + m);
+                let row = doc.querySelector(`tr[data-quarter="ytd"][data-index="${m.idx}"]`);
+                if(row) {
+                    let bdElem = document.getElementById('bd_' + m.id);
+                    let diffElem = document.getElementById('diff_' + m.id);
+                    let bahtElem = document.getElementById('baht_' + m.id);
                     
-                    if(bdElem) { bdElem.value = data[m].bd; bdElem.setAttribute('value', data[m].bd); }
+                    let diffText = row.querySelector('.out-pct-diff').innerText;
+                    
+                    if(bdElem) bdElem.value = row.querySelector('.out-pct-breakdown').innerText;
                     if(diffElem) { 
-                        diffElem.value = data[m].diff; 
-                        diffElem.setAttribute('value', data[m].diff); 
-                        diffElem.style.color = data[m].diff.includes('-') ? '#c0392b' : '#27ae60';
+                        diffElem.value = diffText; 
+                        diffElem.style.color = diffText.includes('-') ? '#c0392b' : '#27ae60';
                     }
-                    if(bahtElem) { bahtElem.value = data[m].baht; bahtElem.setAttribute('value', data[m].baht); }
+                    if(bahtElem) bahtElem.value = row.querySelector('.out-baht-m3').innerText;
                 }
             });
-        }
 
-        // --- ส่วนที่ 2: วาดกราฟ 5 ไตรมาส 9 เครื่องจักร ---
-        Chart.register(ChartDataLabels); // เปิดใช้งานตัวเลขบนกราฟ
-        
-        let allData = JSON.parse(allDataStr);
-        let machines = ["Chipper", "Pz-Flaker", "Dryer", "Screen", "Energy", "Glue Blender", "Forming", "Press", "After press"];
-        let q_keys = ['q1', 'q2', 'q3', 'q4', 'ytd'];
-        let q_labels = ['ไตรมาส 1', 'ไตรมาส 2', 'ไตรมาส 3', 'ไตรมาส 4', 'ผลสะสม (YTD)'];
-        
-        const colors = ['#e74c3c', '#2ecc71', '#f1c40f', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#34495e', '#ff9ff3'];
+            Chart.register(ChartDataLabels);
+            let q_keys = ['q1', 'q2', 'q3', 'q4', 'ytd'];
+            let q_labels = ['ไตรมาส 1', 'ไตรมาส 2', 'ไตรมาส 3', 'ไตรมาส 4', 'ผลสะสม (YTD)'];
+            const colors = ['#e74c3c', '#2ecc71', '#f1c40f', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#34495e', '#ff9ff3'];
 
-        let datasets = machines.map((m, index) => {
-            let dataPoints = q_keys.map(q => {
-                if(allData[q] && allData[q][m]) {
-                    return parseFloat(allData[q][m].bd.replace('%', '')) || 0;
-                }
-                return 0;
+            let datasets = machines.map((m, index) => {
+                let dataPoints = q_keys.map(q => {
+                    let r = doc.querySelector(`tr[data-quarter="${q}"][data-index="${m.idx}"]`);
+                    return r ? parseFloat(r.querySelector('.out-pct-breakdown').innerText.replace('%', '')) || 0 : 0;
+                });
+                return {
+                    label: m.id,
+                    data: dataPoints,
+                    backgroundColor: colors[index],
+                    borderWidth: 1
+                };
             });
-            return {
-                label: m,
-                data: dataPoints,
-                backgroundColor: colors[index],
-                borderWidth: 1
-            };
-        });
 
-        let ctx = document.getElementById('bdChart').getContext('2d');
-        
-        if(bdChartInstance) {
-            bdChartInstance.destroy();
-        }
+            let ctx = document.getElementById('bdChart').getContext('2d');
+            if(bdChartInstance) bdChartInstance.destroy();
 
-        bdChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: q_labels,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                layout: {
-                    padding: { top: 40 }
-                },
-                plugins: {
-                    legend: { position: 'bottom' },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        rotation: -90,
-                        offset: 6,
-                        color: '#333', 
-                        font: { weight: 'bold', size: 11 },
-                        formatter: function(value) {
-                            return value > 0 ? value.toFixed(2) + '%' : ''; 
+            bdChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: q_labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    layout: { padding: { top: 40 } },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        datalabels: {
+                            anchor: 'end', align: 'end', rotation: -90, offset: 6, color: '#333', 
+                            font: { weight: 'bold', size: 11 },
+                            formatter: function(value) { return value > 0 ? value.toFixed(2) + '%' : ''; }
                         }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) { return context.dataset.label + ': ' + context.parsed.y + '%'; }
-                        }
-                    }
-                },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        title: { display: true, text: '% Break down' },
-                        grace: '40%' 
-                    }
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '% Break down' }, grace: '40%' } }
                 }
+            });
+
+            if(!isAutoLoad) {
+                document.getElementById('last_sync_time').innerText = new Date().toLocaleString('th-TH');
+                alert("✅ ซิงค์ข้อมูล OKR 1 สำเร็จ!");
             }
-        });
-        
-        // ถ้าเป็นการกดปุ่มซิงค์เอง (ไม่ใช่ออโต้) ถึงจะเด้งแจ้งเตือน
-        if(!isAutoLoad) {
-            let now = new Date();
-            document.getElementById('last_sync_time').innerText = now.toLocaleString('th-TH');
-            alert("ซิงค์ข้อมูลสำเร็จ! อัปเดตตัวเลขและกราฟเรียบร้อยครับ");
+        } catch (error) {
+            if(!isAutoLoad) alert("❌ ข้อมูล OKR 1 ผิดพลาด: " + error.message);
         }
     }
 
@@ -673,56 +643,47 @@
         container.insertAdjacentHTML('beforeend', okrHTML);
     }
 
-           let bdChart2Instance = null; // ตัวแปรสำหรับเก็บกราฟ OKR 2
+           let bdChart2Instance = null;
 
-    // ฟังก์ชันซิงค์ข้อมูลและวาดกราฟสำหรับ OKR 2
-    function syncData2() {
-        let dataStr = localStorage.getItem('pb_raw_data_okr2_all');
-        
-        if(!dataStr) {
-            alert("⚠️ ไม่พบข้อมูล! กรุณาไปที่หน้า 'อัปเดต Raw data' ของ OKR 2 แล้วกดปุ่มบันทึกข้อมูลสีเขียวก่อนครับ");
-            return;
-        }
-
+    async function syncData2(isAutoLoad = false) {
         try {
-            let data = JSON.parse(dataStr);
+            let response = await fetch('raw_data_okr2.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error("ไม่พบไฟล์ raw_data_okr2.html");
+            let htmlText = await response.text();
             
-            // --- 1. อัปเดตตัวเลขในป้ายสีฟ้า YTD ---
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(htmlText, 'text/html');
+            
+            let ytd_bd = doc.getElementById('p_bd_ytd').textContent.trim();
+            let ytd_diff = doc.getElementById('p_diff_ytd').textContent.trim();
+            let ytd_baht = doc.getElementById('baht_ytd').textContent.trim();
+            
             let bdEl = document.getElementById('ag_bd_2');
             let diffEl = document.getElementById('ag_diff_2');
             let bahtEl = document.getElementById('ag_baht_2');
             
             if (bdEl && diffEl && bahtEl) {
-                bdEl.innerText = data.ytd.bd;
-                diffEl.innerText = data.ytd.diff;
-                bahtEl.innerText = data.ytd.baht;
+                bdEl.innerText = ytd_bd;
+                diffEl.innerText = ytd_diff;
+                bahtEl.innerText = ytd_baht;
                 
-                diffEl.style.color = data.ytd.diff.includes('-') ? '#c0392b' : '#27ae60';
-                bahtEl.style.color = data.ytd.baht.includes('-') ? '#c0392b' : '#27ae60';
+                diffEl.style.color = ytd_diff.includes('-') ? '#c0392b' : '#27ae60';
+                bahtEl.style.color = ytd_baht.includes('-') ? '#c0392b' : '#27ae60';
             }
 
-            // --- 2. วาดกราฟ 4 ไตรมาส + YTD ---
-            Chart.register(ChartDataLabels);
-            
-            // ฟังก์ชันแปลงข้อความ "%" ให้เป็นตัวเลขสำหรับกราฟ
             let parsePct = (val) => parseFloat(val.replace('%', '')) || 0;
-            
             let dataPoints = [
-                parsePct(data.q1),
-                parsePct(data.q2),
-                parsePct(data.q3),
-                parsePct(data.q4),
-                parsePct(data.ytd.bd)
+                parsePct(doc.getElementById('p_bd_1').textContent),
+                parsePct(doc.getElementById('p_bd_2').textContent),
+                parsePct(doc.getElementById('p_bd_3').textContent),
+                parsePct(doc.getElementById('p_bd_4').textContent),
+                parsePct(ytd_bd)
             ];
 
+            Chart.register(ChartDataLabels);
             let ctx = document.getElementById('bdChart2').getContext('2d');
+            if (bdChart2Instance) bdChart2Instance.destroy();
             
-            // ลบกราฟเก่าทิ้งก่อนถ้าวาดซ้ำ
-            if (bdChart2Instance) {
-                bdChart2Instance.destroy();
-            }
-
-            // สร้างกราฟใหม่
             bdChart2Instance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -732,40 +693,28 @@
                         data: dataPoints,
                         backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#9b59b6'],
                         borderWidth: 1,
-                        maxBarThickness: 60  // 🌟 เพิ่มคำสั่งนี้เพื่อบีบแท่งกราฟไม่ให้กว้างเกินไป (ปรับเลข 60 ได้ตามชอบ)
+                        maxBarThickness: 60
                     }]
                 },
                 options: {
                     responsive: true,
                     layout: { padding: { top: 30 } },
                     plugins: {
-                        legend: { display: false }, // ซ่อนป้ายกำกับด้านบนเพราะมีข้อมูลเดียว
+                        legend: { display: false },
                         datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            rotation: -90, // หมุนตัวเลขให้เป็นแนวตั้ง
-                            offset: 6,
-                            color: '#333', 
+                            anchor: 'end', align: 'end', rotation: -90, offset: 6, color: '#333',
                             font: { weight: 'bold', size: 12 },
-                            formatter: function(value) {
-                                return value > 0 ? value.toFixed(3) + '%' : '0.000%'; 
-                            }
+                            formatter: function(value) { return value > 0 ? value.toFixed(3) + '%' : '0.000%'; }
                         }
                     },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            title: { display: true, text: '% LG Press เครื่องกลขัดข้อง' },
-                            grace: '30%' // เผื่อพื้นที่ด้านบนให้ตัวเลขไม่โดนตัด
-                        }
-                    }
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '% LG Press เครื่องกลขัดข้อง' }, grace: '30%' } }
                 }
             });
 
-            alert("✅ ซิงค์ข้อมูล OKR 2 และอัปเดตกราฟสำเร็จ! 🚀");
+            if(!isAutoLoad) alert("✅ ซิงค์ข้อมูล OKR 2 สำเร็จ!");
             
         } catch (error) {
-            alert("❌ เกิดข้อผิดพลาดในการอ่านข้อมูล: " + error.message);
+            if(!isAutoLoad) alert("❌ ข้อมูล OKR 2 ผิดพลาด: " + error.message);
         }
     }
 
