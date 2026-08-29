@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+    <meta charset="UTF-8">
+    <title>ข้อมูลดิบ - บอร์ด LG Press</title>
+    <style>
+        html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .header-top { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; position: sticky; top: 0; 
+            background-color: #f4f6f9; padding: 15px 0; z-index: 1000; border-bottom: 2px dashed #bdc3c7;
+        }
+        
+        .header-title { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .nav-links { font-size: 14px; margin-top: 5px; }
+        .nav-links a { text-decoration: none; color: #3498db; margin-right: 15px; font-weight: bold; }
+        .nav-links a:hover { text-decoration: underline; }
+        
+        .btn-group { display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
+        .btn-close { background-color: #7f8c8d; }
+        .btn-save { background-color: #2ecc71; }
+        
+        .quarter-card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; padding: 20px; }
+        .quarter-title { font-size: 20px; color: #2980b9; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        
+        .global-params { background-color: #eaf4fc; padding: 15px 20px; border-radius: 6px; display: flex; gap: 50px; margin-bottom: 20px; border: 1px solid #d6eaf8; }
+        .param-item label { display: block; font-size: 13px; font-weight: bold; color: #2980b9; margin-bottom: 5px; }
+        .param-item input { padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; width: 150px; font-size: 14px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px; text-align: center; }
+        th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+        td.group-name { text-align: left; font-weight: bold; color: #2c3e50; }
+        
+        input.target-in { background-color: #fff9c4; border: 1px solid #f1c40f; padding: 6px; width: 80%; text-align: center; border-radius: 4px; }
+        input.actual-in { background-color: #fff9c4; border: 1px solid #f1c40f; padding: 6px; width: 80%; text-align: center; border-radius: 4px; }
+        
+        .text-red { color: #c0392b; font-weight: bold; }
+        .text-green { color: #27ae60; font-weight: bold; }
+        
+        .ytd-card { border: 2px solid #2ecc71; }
+        .ytd-title { color: #27ae60; border-bottom-color: #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-top">
+        <div>
+            <div class="header-title">📊 ข้อมูลดิบ (Raw Data) - บอร์ด LG Press</div>
+            <div class="nav-links">
+                ข้ามไปที่: 
+                <a href="#q1">ไตรมาส 1</a> | 
+                <a href="#q2">ไตรมาส 2</a> | 
+                <a href="#q3">ไตรมาส 3</a> | 
+                <a href="#q4">ไตรมาส 4</a> | 
+                <a href="#ytd">📈 ผลสะสม (YTD)</a>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-close" onclick="window.close()">⬅ ปิดหน้าต่างนี้</button>
+            <button class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูลทั้งหมด</button>
+        </div>
+    </div>
+
+    <div id="quarters-container">
+            <div class="quarter-card" id="q1">
+                <div class="quarter-title">ไตรมาส 1 (Quarter 1)</div>
+                
+                <div class="global-params">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดทั้งหมด m3.Output</label>
+                        <input type="number" id="prod_1" value="75173.29" oninput="calculate()">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสีย (Baht / m3)</label>
+                        <input type="number" id="cost_1" value="0" oninput="calculate()">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์</td>
+                            <td><input type="number" class="target-in" id="target_1" value="0" step="0.01" oninput="calculate()"></td>
+                            <td id="t_m3_1">0.00</td>
+                            <td><input type="number" class="actual-in" id="bd_1" value="0" oninput="calculate()"></td>
+                            <td id="p_bd_1">0.000%</td>
+                            <td id="p_diff_1" class="">0.000%</td>
+                            <td id="d_m3_1" class="">0.00</td>
+                            <td id="baht_1" class="">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="quarter-card" id="q2">
+                <div class="quarter-title">ไตรมาส 2 (Quarter 2)</div>
+                
+                <div class="global-params">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดทั้งหมด m3.Output</label>
+                        <input type="number" id="prod_2" value="26340.92" oninput="calculate()">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสีย (Baht / m3)</label>
+                        <input type="number" id="cost_2" value="0" oninput="calculate()">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์</td>
+                            <td><input type="number" class="target-in" id="target_2" value="0" step="0.01" oninput="calculate()"></td>
+                            <td id="t_m3_2">0.00</td>
+                            <td><input type="number" class="actual-in" id="bd_2" value="0" oninput="calculate()"></td>
+                            <td id="p_bd_2">0.000%</td>
+                            <td id="p_diff_2" class="">0.000%</td>
+                            <td id="d_m3_2" class="">0.00</td>
+                            <td id="baht_2" class="">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="quarter-card" id="q3">
+                <div class="quarter-title">ไตรมาส 3 (Quarter 3)</div>
+                
+                <div class="global-params">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดทั้งหมด m3.Output</label>
+                        <input type="number" id="prod_3" value="16394.43" oninput="calculate()">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสีย (Baht / m3)</label>
+                        <input type="number" id="cost_3" value="0" oninput="calculate()">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์</td>
+                            <td><input type="number" class="target-in" id="target_3" value="0.1" step="0.01" oninput="calculate()"></td>
+                            <td id="t_m3_3">16.39</td>
+                            <td><input type="number" class="actual-in" id="bd_3" value="0" oninput="calculate()"></td>
+                            <td id="p_bd_3">0.000%</td>
+                            <td id="p_diff_3" class="text-green">0.100%</td>
+                            <td id="d_m3_3" class="text-green">16.39</td>
+                            <td id="baht_3" class="">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="quarter-card" id="q4">
+                <div class="quarter-title">ไตรมาส 4 (Quarter 4)</div>
+                
+                <div class="global-params">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดทั้งหมด m3.Output</label>
+                        <input type="number" id="prod_4" value="0" oninput="calculate()">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสีย (Baht / m3)</label>
+                        <input type="number" id="cost_4" value="0" oninput="calculate()">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์</td>
+                            <td><input type="number" class="target-in" id="target_4" value="0.1" step="0.01" oninput="calculate()"></td>
+                            <td id="t_m3_4">0.00</td>
+                            <td><input type="number" class="actual-in" id="bd_4" value="0" oninput="calculate()"></td>
+                            <td id="p_bd_4">0.000%</td>
+                            <td id="p_diff_4" class="text-green">0.100%</td>
+                            <td id="d_m3_4" class="">0.00</td>
+                            <td id="baht_4" class="">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div></div>
+    <div id="ytd-container">
+            <div class="quarter-card ytd-card" id="ytd">
+                <div class="quarter-title ytd-title">📈 ผลสะสม (YTD)</div>
+                <div class="global-params" style="background-color:#e8f8f5; border-color:#a3e4d7;">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดรวม (m3)</label>
+                        <input type="text" id="prod_ytd" readonly="" style="background:#f4f6f7; font-weight:bold;" value="117,908.64">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสียเฉลี่ย (Baht / m3)</label>
+                        <input type="text" id="cost_ytd" readonly="" style="background:#f4f6f7; font-weight:bold;" value="0.00">
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background-color: #fef9e7;">
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์ (รวม)</td>
+                            <td id="target_ytd" style="font-weight:bold;">0.00%</td>
+                            <td id="t_m3_ytd" style="font-weight:bold;">16.39</td>
+                            <td id="bd_ytd" style="font-weight:bold; color:#d35400;">0.00</td>
+                            <td id="p_bd_ytd" style="font-weight:bold;">0.000%</td>
+                            <td id="p_diff_ytd" style="font-weight:bold;" class="">0.000%</td>
+                            <td id="d_m3_ytd" style="font-weight:bold;" class="text-green">16.39</td>
+                            <td id="baht_ytd" style="font-weight:bold; font-size:16px;" class="">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div></div>
+</div>
+
+<script>
+    const data = [
+        { id: 1, name: "ไตรมาส 1 (Quarter 1)", prod: 75173.29, cost: 20.0, target: 0.1, bd: 100 },
+        { id: 2, name: "ไตรมาส 2 (Quarter 2)", prod: 26340.92, cost: 20.0, target: 0.1, bd: 100 },
+        { id: 3, name: "ไตรมาส 3 (Quarter 3)", prod: 16394.43, cost: 20.0, target: 0.1, bd: 0 },
+        { id: 4, name: "ไตรมาส 4 (Quarter 4)", prod: 0.00, cost: 20.0, target: 0.1, bd: 0 }
+    ];
+
+    function renderQuarters() {
+        let html = '';
+        data.forEach(q => {
+            html += `
+            <div class="quarter-card" id="q${q.id}">
+                <div class="quarter-title">${q.name}</div>
+                
+                <div class="global-params">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดทั้งหมด m3.Output</label>
+                        <input type="number" id="prod_${q.id}" value="${q.prod}" oninput="calculate()">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสีย (Baht / m3)</label>
+                        <input type="number" id="cost_${q.id}" value="${q.cost}" oninput="calculate()">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์</td>
+                            <td><input type="number" class="target-in" id="target_${q.id}" value="${q.target}" step="0.01" oninput="calculate()"></td>
+                            <td id="t_m3_${q.id}">0.00</td>
+                            <td><input type="number" class="actual-in" id="bd_${q.id}" value="${q.bd}" oninput="calculate()"></td>
+                            <td id="p_bd_${q.id}">0.000%</td>
+                            <td id="p_diff_${q.id}">0.000%</td>
+                            <td id="d_m3_${q.id}">0.00</td>
+                            <td id="baht_${q.id}">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+        });
+        document.getElementById('quarters-container').innerHTML = html;
+        
+        let ytdHtml = `
+            <div class="quarter-card ytd-card" id="ytd">
+                <div class="quarter-title ytd-title">📈 ผลสะสม (YTD)</div>
+                <div class="global-params" style="background-color:#e8f8f5; border-color:#a3e4d7;">
+                    <div class="param-item">
+                        <label>ยอดผลิตบอร์ดรวม (m3)</label>
+                        <input type="text" id="prod_ytd" readonly style="background:#f4f6f7; font-weight:bold;">
+                    </div>
+                    <div class="param-item">
+                        <label>ค่าสูญเสียเฉลี่ย (Baht / m3)</label>
+                        <input type="text" id="cost_ytd" readonly style="background:#f4f6f7; font-weight:bold;">
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รายการ (Item)</th>
+                            <th>%.Target</th>
+                            <th>Target (m3)</th>
+                            <th>LG Press (m3)</th>
+                            <th>%.LG Press เครื่องกล</th> <!-- เปลี่ยนตรงนี้แล้ว -->
+                            <th>%.Difference</th>
+                            <th>Diff (m3)</th>
+                            <th>Baht</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background-color: #fef9e7;">
+                            <td class="group-name">LG Press จากเครื่องกลขัดข้องท้ายไลน์ (รวม)</td>
+                            <td id="target_ytd" style="font-weight:bold;">0.10%</td>
+                            <td id="t_m3_ytd" style="font-weight:bold;">0.00</td>
+                            <td id="bd_ytd" style="font-weight:bold; color:#d35400;">0.00</td>
+                            <td id="p_bd_ytd" style="font-weight:bold;">0.000%</td>
+                            <td id="p_diff_ytd" style="font-weight:bold;">0.000%</td>
+                            <td id="d_m3_ytd" style="font-weight:bold;">0.00</td>
+                            <td id="baht_ytd" style="font-weight:bold; font-size:16px;">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+        document.getElementById('ytd-container').innerHTML = ytdHtml;
+    }
+
+    function formatNumber(num, decimals = 2) {
+        return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function getColorClass(val) {
+        if (val < 0) return 'text-red';
+        if (val > 0) return 'text-green';
+        return '';
+    }
+
+    function calculate() {
+        let sumProd = 0;
+        let sumBd = 0;
+        let sumTargetM3 = 0;
+        let sumDiffM3 = 0;
+        let sumBaht = 0;
+        let targetPctYtd = 0.1; 
+        let costYtd = 20.0;
+
+        for (let i = 1; i <= 4; i++) {
+            let prod = parseFloat(document.getElementById(`prod_${i}`).value) || 0;
+            let cost = parseFloat(document.getElementById(`cost_${i}`).value) || 0;
+            let targetPct = parseFloat(document.getElementById(`target_${i}`).value) || 0;
+            let bd = parseFloat(document.getElementById(`bd_${i}`).value) || 0;
+
+            let targetM3 = prod * (targetPct / 100);
+            let pctBd = prod > 0 ? (bd / prod) * 100 : 0;
+            let diffPct = targetPct - pctBd;
+            let diffM3 = targetM3 - bd;
+            let baht = diffM3 * cost;
+
+            document.getElementById(`t_m3_${i}`).innerText = formatNumber(targetM3);
+            document.getElementById(`p_bd_${i}`).innerText = pctBd.toFixed(3) + '%';
+            
+            let pDiffEl = document.getElementById(`p_diff_${i}`);
+            pDiffEl.innerText = diffPct.toFixed(3) + '%';
+            pDiffEl.className = getColorClass(diffPct);
+
+            let dM3El = document.getElementById(`d_m3_${i}`);
+            dM3El.innerText = formatNumber(diffM3);
+            dM3El.className = getColorClass(diffM3);
+
+            let bahtEl = document.getElementById(`baht_${i}`);
+            bahtEl.innerText = formatNumber(baht);
+            bahtEl.className = getColorClass(baht);
+
+            sumProd += prod;
+            sumBd += bd;
+            sumTargetM3 += targetM3;
+            sumDiffM3 += diffM3;
+            sumBaht += baht;
+            
+            if(i === 1) { targetPctYtd = targetPct; costYtd = cost; }
+        }
+
+        let pctBdYtd = sumProd > 0 ? (sumBd / sumProd) * 100 : 0;
+        let diffPctYtd = targetPctYtd - pctBdYtd;
+
+        document.getElementById('prod_ytd').value = formatNumber(sumProd);
+        document.getElementById('cost_ytd').value = costYtd.toFixed(2);
+        
+        document.getElementById('target_ytd').innerText = targetPctYtd.toFixed(2) + '%';
+        document.getElementById('t_m3_ytd').innerText = formatNumber(sumTargetM3);
+        document.getElementById('bd_ytd').innerText = formatNumber(sumBd);
+        document.getElementById('p_bd_ytd').innerText = pctBdYtd.toFixed(3) + '%';
+        
+        let pDiffYtdEl = document.getElementById('p_diff_ytd');
+        pDiffYtdEl.innerText = diffPctYtd.toFixed(3) + '%';
+        pDiffYtdEl.className = getColorClass(diffPctYtd);
+
+        let dM3YtdEl = document.getElementById('d_m3_ytd');
+        dM3YtdEl.innerText = formatNumber(sumDiffM3);
+        dM3YtdEl.className = getColorClass(sumDiffM3);
+
+        let bahtYtdEl = document.getElementById('baht_ytd');
+        bahtYtdEl.innerText = formatNumber(sumBaht);
+        bahtYtdEl.className = getColorClass(sumBaht);
+    }
+
+    function saveData() {
+        // อัปเกรด: บันทึกข้อมูล % Break down ทั้ง 4 ไตรมาส และ YTD ลงเครื่อง
+        let okr2Data = {
+            q1: document.getElementById('p_bd_1').innerText,
+            q2: document.getElementById('p_bd_2').innerText,
+            q3: document.getElementById('p_bd_3').innerText,
+            q4: document.getElementById('p_bd_4').innerText,
+            ytd: {
+                bd: document.getElementById('p_bd_ytd').innerText,
+                diff: document.getElementById('p_diff_ytd').innerText,
+                baht: document.getElementById('baht_ytd').innerText
+            }
+        };
+        localStorage.setItem('pb_raw_data_okr2_all', JSON.stringify(okr2Data));
+
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.setAttribute('value', input.value);
+        });
+        let htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        
+        let blob = new Blob([htmlContent], { type: 'text/html' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'raw_data_okr2.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        alert("✅ บันทึกข้อมูลทุกไตรมาสลงระบบเรียบร้อยแล้ว!\n(กลับไปหน้า Dashboard เพื่ออัปเดตกราฟได้เลยครับ)");
+    }
+
+    window.onload = function() {
+        renderQuarters();
+        calculate();
+    };
+</script>
+
+
+</body></html>

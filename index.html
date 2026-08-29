@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PB Mechanical Maintenance - OKR Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .dashboard {
+            max-width: 1200px; 
+            margin: 0 auto;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        .header .date {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .okr-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+        .btn-add { background: #3498db; color: white; }
+        .btn-add:hover { background: #2980b9; }
+        .btn-export { background: #27ae60; color: white; }
+        .btn-export:hover { background: #2ecc71; }
+        .btn-sync { background: #9b59b6; color: white; }
+        .btn-sync:hover { background: #8e44ad; }
+        .btn-edit { background: #f1c40f; color: #333; }
+        .btn-save { background: #2ecc71; color: white; display: none; }
+        .btn-detail { background: #34495e; color: white; }
+        .btn-detail:hover { background: #2c3e50; }
+        
+        .okr-list { display: flex; flex-direction: column; gap: 10px; }
+        .okr-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+            transition: 0.3s;
+        }
+        
+        .okr-main-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .okr-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 75%;
+        }
+        .okr-title { font-size: 16px; font-weight: 600; margin: 0; }
+        
+        .all-group-badge {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1565c0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        .badge-val { font-weight: bold; color: #d35400; }
+
+        .okr-input {
+            width: 100%;
+            padding: 6px;
+            font-size: 16px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            display: none;
+            font-family: inherit;
+        }
+        .okr-actions { display: flex; gap: 8px; }
+
+        .btn-graph { background: #9b59b6; color: white; }
+        .btn-graph:hover { background: #8e44ad; }
+        
+        .kr-section {
+            margin-top: 15px; 
+            padding: 15px; 
+            border-top: 2px dashed #ddd; 
+            background: #fff; 
+            border-radius: 0 0 6px 6px;
+        }
+
+        /* --- 🌟 ดีไซน์ Grid 3 แถว และ OKR ด้านซ้าย 🌟 --- */
+        .kr-layout-main {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            padding: 15px 0;
+        }
+        
+        /* กล่อง OKR ด้านซ้าย */
+        .okr-side-card {
+            flex: 0 0 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: #fdfdfd;
+            border: 2px solid #27ae60;
+            border-radius: 12px;
+            padding: 20px 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: border-color 0.3s;
+        }
+
+        /* Grid สำหรับ KR 3 คอลัมน์ */
+        .kr-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .kr-circle-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 15px 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            position: relative;
+            transition: 0.3s;
+        }
+        .kr-circle-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .conf-header { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .conf-header input { width: 40px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; outline: none; }
+
+        .kr-circle {
+            width: 140px; 
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px; 
+            margin-bottom: 15px;
+            padding: 15px;
+            box-sizing: border-box;
+            border: 3px solid #fff;
+            cursor: text;
+            outline: none;
+            line-height: 1.4;
+            word-break: break-word;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        
+        /* สีวงกลมตามความมั่นใจ (KR ย่อย) */
+        .kr-circle-card.c-red .kr-circle { background-color: #e74c3c; box-shadow: 0 0 0 3px #c0392b; }
+        .kr-circle-card.c-yellow .kr-circle { background-color: #f1c40f; box-shadow: 0 0 0 3px #f39c12; color: #333; }
+        .kr-circle-card.c-green .kr-circle { background-color: #27ae60; box-shadow: 0 0 0 3px #2196f3; }
+
+        /* สีวงกลมตามความมั่นใจ (OKR หลัก ด้านซ้าย) */
+        .okr-side-card.c-red .kr-circle { background-color: #e74c3c; box-shadow: 0 0 0 3px #c0392b; color: white; }
+        .okr-side-card.c-yellow .kr-circle { background-color: #f1c40f; box-shadow: 0 0 0 3px #f39c12; color: #333; }
+        .okr-side-card.c-green .kr-circle { background-color: #27ae60; box-shadow: 0 0 0 3px #1e8449; color: white; }
+
+        .kr-data-box {
+            background: #2c3e50;
+            color: white;
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: left;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .kr-data-box div { margin-bottom: 4px; border-bottom: 1px dotted rgba(255,255,255,0.2); padding-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
+        .kr-data-box div:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+        
+        .kr-data-box input {
+            background: transparent;
+            border: none;
+            color: #f1c40f;
+            font-weight: bold;
+            width: 70px;
+            text-align: right;
+            font-family: inherit;
+            outline: none;
+            font-size: 12px;
+        }
+
+        .kr-detail-btn { background: #34495e; color: white; border: 1px solid #fff; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%; text-decoration: none; text-align: center; display: block; box-sizing: border-box; transition: 0.2s;}
+        .kr-detail-btn:hover { background: #e67e22; border-color: #e67e22;}
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <button class="btn btn-export" style="position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.2); font-size: 16px; padding: 12px 20px;" onclick="exportHTML()">
+        💾 บันทึกการเปลี่ยนแปลงทั้งหมด
+    </button>
+    <div class="header">
+        <div class="header-title-group" style="display: flex; align-items: center;">
+            <img src="https://static.jobtopgun.com/company_image/13/24671/logo_com_job/j24671.gif?time=20260629165001" alt="Company Logo" style="height: 45px; width: auto; margin-right: 20px;">
+            <h1>🎯 PB Mechanical Maintenance - OKR Dashboard 2569</h1>
+        </div>
+        <div class="date">อัปเดตข้อมูลล่าสุด: <span id="last_sync_time">22/8/2569 14:19:17</span></div>
+    </div>
+
+    <div class="okr-section-header">
+        <h2>รายการเป้าหมาย (Objectives)</h2>
+    </div>
+
+    <div class="okr-list" id="okrContainer">
+        
+        <!-- ==================== OKR Item 1 ==================== -->
+        <div class="okr-item">
+            <div class="okr-main-row" style="display: block; padding-bottom: 15px;">
+                <div class="okr-content" style="display: block; width: 100%;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        🎯 <span class="okr-title" contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อแก้ไขชื่อ OKR">OKR ลดความสูญเปล่า/เพิ่มชั่วโมงการผลิต</span>
+                    </div>
+                    <div style="font-size: 15px; color: #d35400; font-weight: bold; margin-bottom: 12px; padding-left: 25px;">
+                        📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อแก้ไขเป้าหมาย">ควบคุม Break down ด้านเครื่องกลที่กระทบ Press ≤ 3 %</span>
+                    </div>
+                    <div style="margin-bottom: 15px; padding-left: 25px;">
+                        <span class="all-group-badge">
+                            📈 All Group (YTD): Break down <span class="badge-val" id="ag_bd">15.872%</span> | Diff <span class="badge-val" id="ag_diff">-12.872%</span> | <span class="badge-val" id="ag_baht">-54.40</span> บาท/m3
+                        </span>
+                    </div>
+                </div>
+
+                <div class="okr-actions" style="display: flex; gap: 10px; padding-left: 25px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-graph" onclick="toggleGraph(this)">📊 กราฟ</button>
+                    <button class="btn btn-sync" onclick="syncData()" style="background-color: #f1c40f; color: #2c3e50; border: none;">🔄 ซิงค์ข้อมูลจาก Raw Data</button>
+                    <button class="btn btn-add" style="background-color: #e67e22;" onclick="window.open('raw_data.html', '_blank')">📊 อัปเดต Raw data</button>
+                    <span style="margin-left: auto; cursor: pointer; font-size: 18px; opacity: 0.7;" title="ลบ OKR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ครั้งที่ 1: ต้องการลบ OKR นี้ใช่หรือไม่?')) { if(confirm('ครั้งที่ 2: ยืนยันการลบอีกครั้ง! (ลบแล้วข้อมูลจะหายไปเลยนะ)')) this.closest('.okr-item').remove(); }">🗑️</span>
+                </div>
+            </div>
+            
+            <!-- ซ่อนกราฟไว้ตอนแรก (display: none) -->
+            <div class="graph-section" style="display: none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #2c3e50;">📊 กราฟเปรียบเทียบ % Break down รายไตรมาส</h3>
+                <canvas id="bdChart" height="204" width="767" style="display: block; box-sizing: border-box; height: 204px; width: 767px;"></canvas>
+            </div>
+            
+            <!-- เปิดโชว์ KR วงกลมไว้ตลอด (display: block) -->
+            <div class="kr-section" style="display: block;">
+                <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Key Results (ตัวชี้วัดย่อย) - ข้อมูลสะสม (YTD)</h4>
+                
+                <div class="kr-layout-main">
+                    
+                    <!-- 🌟 กล่องวงกลม OKR ด้านซ้าย 🌟 -->
+                    <div class="okr-side-card c-yellow" style="border-color: rgb(241, 196, 15);">
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 18px; margin-bottom: 10px;">🎯 Objective</div>
+                        
+                        <!-- 🌟 แถบความมั่นใจ OKR หลัก 🌟 -->
+                        <div class="conf-header">
+                            มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10
+                        </div>
+
+                        <!-- วงกลม OKR สีจะเปลี่ยนตามคลาสอัตโนมัติ -->
+                        <div class="kr-circle" contenteditable="true" style="width: 150px; height: 150px; font-size: 13px;">
+                            ควบคุม Break down ด้านเครื่องกลที่กระทบ Press ≤ 3 %
+                        </div>
+                        
+                        <div class="kr-data-box">
+                            <div>Actual %: <input type="text" id="ag_bd_circle" value="15.872%" readonly=""></div>
+                            <div>Diff %: <input type="text" id="ag_diff_circle" value="-12.872%" readonly="" style="color: #ff7675;"></div>
+                            <div>บาท/m³: <input type="text" id="ag_baht_circle" value="-54.40" readonly=""></div>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 Grid สำหรับ KR 3 แถว 🌟 -->
+                    <div class="kr-grid">
+                        
+                        <!-- KR 1 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR1 ควบคุม Break down กลุ่มเครื่องจักร Chipper ≤ 0.15%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Chipper" value="1.146%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Chipper" value="-0.996%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Chipper" value="-4.21" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr1_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 2 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR2 ควบคุม Break down กลุ่มเครื่องจักร Pz-Flaker ≤ 0.15%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Pz-Flaker" value="2.951%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Pz-Flaker" value="-2.801%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Pz-Flaker" value="-11.84" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr2_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 3 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR3 ควบคุม Break down กลุ่มเครื่องจักร Dryer ≤ 0.15%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Dryer" value="1.328%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Dryer" value="-1.178%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Dryer" value="-4.98" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr3_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 4 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR4 ควบคุม Break down กลุ่มเครื่องจักร Screen ≤ 0.15%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Screen" value="0.111%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Screen" value="0.039%" readonly="" style="color: #00e676;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Screen" value="0.17" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr4_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 5 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="4" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR5 ควบคุม Break down กลุ่มเครื่องจักร Energy ≤ 0.20%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Energy" value="0.759%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Energy" value="-0.559%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Energy" value="-2.36" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr5_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 6 -->
+                        <div class="kr-circle-card c-red">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="2" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR6 ควบคุม Break down กลุ่มเครื่องจักร Glue Blender ≤ 0.80%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Glue Blender" value="4.174%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Glue Blender" value="-3.374%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Glue Blender" value="-14.26" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr6_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 7 -->
+                        <div class="kr-circle-card c-red">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="3" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR7 ควบคุม Break down กลุ่มเครื่องจักร Forming ≤ 0.40%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Forming" value="0.553%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Forming" value="-0.153%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Forming" value="-0.65" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr7_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 8 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="4" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR8 ควบคุม Break down กลุ่มเครื่องจักร Press ≤ 0.60%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_Press" value="2.241%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_Press" value="-1.641%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_Press" value="-6.94" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr8_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- KR 9 -->
+                        <div class="kr-circle-card c-red">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="3" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR9 ควบคุม Break down กลุ่มเครื่องจักร After press ≤ 0.40%
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" id="bd_After press" value="1.327%" readonly=""></div>
+                                <div>Diff %: <input type="text" id="diff_After press" value="-0.927%" readonly="" style="color: #ff7675;"></div>
+                                <div>บาท/m³: <input type="text" id="baht_After press" value="-3.92" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('kr9_details.html', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                    </div>
+                </div>
+                <button class="btn btn-add" style="background-color: #3498db; width: 100%; margin-top: 10px;" onclick="addKR(this)">➕ เพิ่ม KR ย่อย</button>
+            </div>
+        </div>
+
+        <!-- ==================== OKR Item 2 ==================== -->
+        <div class="okr-item" style="margin-top: 30px; border-top: 2px dashed #bdc3c7; padding-top: 20px;">
+            <div class="okr-main-row" style="display: block; padding-bottom: 15px;">
+                <div class="okr-content" style="display: block; width: 100%;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        🎯 <span class="okr-title" contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์ชื่อ OKR">OKR ลดต้นทุนสูญเปล่า ลดบอร์ด LG press&nbsp;</span>
+                    </div>
+                    <div style="font-size: 15px; color: #d35400; font-weight: bold; margin-bottom: 12px; padding-left: 25px;">
+                        📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์เป้าหมาย">ควบคุมให้มีบอร์ด LG Press ≤ 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง</span>
+                    </div>
+                    <div style="margin-bottom: 15px; padding-left: 25px;">
+                        <span class="all-group-badge">
+                            📈 ผลสะสม (YTD): LG Press <span class="badge-val" id="ag_bd_2">0.000%</span> | Diff <span class="badge-val" id="ag_diff_2">0.000%</span> | <span class="badge-val" id="ag_baht_2">0.00</span> บาท
+                        </span>
+                    </div>
+                </div>
+
+                <div class="okr-actions" style="display: flex; gap: 10px; padding-left: 25px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-graph" onclick="toggleGraph(this)">📊 กราฟ</button>
+                    <button class="btn btn-sync" onclick="syncData2()" style="background-color: #f1c40f; color: #2c3e50; border: none;">🔄 ซิงค์ข้อมูลจาก Raw Data</button>
+                    <button class="btn btn-add" style="background-color: #e67e22;" onclick="window.open('raw_data_okr2.html', '_blank')">📊 อัปเดต Raw data</button>
+                    <span style="margin-left: auto; cursor: pointer; font-size: 18px; opacity: 0.7;" title="ลบ OKR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ครั้งที่ 1: ต้องการลบ OKR นี้ใช่หรือไม่?')) { if(confirm('ครั้งที่ 2: ยืนยันการลบอีกครั้ง! (ลบแล้วข้อมูลจะหายไปเลยนะ)')) this.closest('.okr-item').remove(); }">🗑️</span>
+                </div>
+            </div>
+
+            <!-- ซ่อนกราฟไว้ตอนแรก (display: none) -->
+            <div class="graph-section" style="display: none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #2c3e50;">📊 กราฟเปรียบเทียบ % บอร์ด LG Press จากเครื่องกลขัดข้องท้ายไลน์ รายไตรมาส</h3>
+                <canvas id="bdChart2" height="100"></canvas>
+            </div>
+
+            <!-- เปิดโชว์ KR วงกลมไว้ตลอด (display: block) -->
+            <div class="kr-section" style="display: block; background: rgb(248, 249, 250); padding: 20px; border-radius: 8px;">
+                <div class="kr-layout-main">
+                    
+                    <!-- 🌟 กล่องวงกลม OKR 2 ด้านซ้าย 🌟 -->
+                    <div class="okr-side-card c-yellow" style="border-color: rgb(241, 196, 15);">
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 18px; margin-bottom: 10px;">🎯 Objective</div>
+                        
+                        <div class="conf-header">
+                            มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10
+                        </div>
+
+                        <div class="kr-circle" contenteditable="true" style="width: 150px; height: 150px; font-size: 13px;">
+                            ควบคุมให้มีบอร์ด LG Press ≤ 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง
+                        </div>
+                        
+                        <div class="kr-data-box">
+                            <div>Actual %: <input type="text" id="ag_bd_2_circle" value="0.000%" readonly=""></div>
+                            <div>Diff %: <input type="text" id="ag_diff_2_circle" value="0.000%" readonly=""></div>
+                            <div>บาท/m³: <input type="text" id="ag_baht_2_circle" value="0.00" readonly=""></div>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 Grid สำหรับ KR 3 แถว 🌟 -->
+                    <div class="kr-grid">
+                        
+                        <!-- OKR2 KR 1 -->
+                        <div class="kr-circle-card c-yellow">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="6" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR1 ปรับปรุงการตรวจเช็คเครื่องจักร After press ประจำวัน
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" value="0%" readonly=""></div>
+                                <div>Diff %: <input type="text" value="0%" readonly=""></div>
+                                <div>บาท/m³: <input type="text" value="0.00" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                        <!-- OKR2 KR 2 -->
+                        <div class="kr-circle-card c-red">
+                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+                            <div class="conf-header">มั่นใจ <input type="number" value="3" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
+                            <div class="kr-circle" contenteditable="true">
+                                KR2 การซ่อมบำรุง Stack Emer ให้กลับมาใช้งานได้ปกติ
+                            </div>
+                            <div class="kr-data-box">
+                                <div>Actual %: <input type="text" value="0%" readonly=""></div>
+                                <div>Diff %: <input type="text" value="0%" readonly=""></div>
+                                <div>บาท/m³: <input type="text" value="0.00" readonly=""></div>
+                            </div>
+                            <button class="kr-detail-btn" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+                        </div>
+
+                    </div>
+                </div>
+                <button class="btn btn-add" style="background-color: #3498db; width: 100%; margin-top: 10px;" onclick="addKR(this)">➕ เพิ่ม KR ย่อย</button>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="btn btn-add" style="width: 100%; padding: 15px; font-size: 16px; background-color: #34495e; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; margin-bottom: 30px;" onclick="addNewOKR()">
+        ➕ เพิ่มเป้าหมาย OKR ใหม่
+    </button>
+
+<script>
+    function toggleEdit(btn) {
+        let item = btn.closest('.okr-item');
+        item.querySelector('.okr-title').style.display = 'none';
+        item.querySelector('.okr-input').style.display = 'block';
+        item.querySelector('.okr-input').focus();
+        btn.style.display = 'none';
+        item.querySelector('.btn-save').style.display = 'inline-block';
+    }
+
+    function saveEdit(btn) {
+        let item = btn.closest('.okr-item');
+        let newTitle = item.querySelector('.okr-input').value;
+        let badgeHTML = item.querySelector('.all-group-badge').outerHTML;
+        item.querySelector('.okr-title').innerHTML = newTitle + ' ' + badgeHTML;
+        item.querySelector('.okr-input').setAttribute('value', newTitle); 
+        item.querySelector('.okr-title').style.display = 'inline-block';
+        item.querySelector('.okr-input').style.display = 'none';
+        btn.style.display = 'none';
+        item.querySelector('.btn-edit').style.display = 'inline-block';
+    }
+
+    // 🌟 เปลี่ยนจากปุ่มโชว์ KR เป็นปุ่มโชว์กราฟ 🌟
+    function toggleGraph(btn) {
+        let item = btn.closest('.okr-item');
+        let graphSection = item.querySelector('.graph-section');
+        if(graphSection) {
+            graphSection.style.display = (graphSection.style.display === 'none') ? 'block' : 'none';
+        }
+    }
+
+    // ฟังก์ชันเปลี่ยนสีวงกลม (ใช้ได้ทั้ง KR ย่อย และ OKR หลัก)
+    function updateCircleColor(input) {
+        input.setAttribute('value', input.value); 
+        let val = parseInt(input.value) || 0;
+        
+        let card = input.closest('.kr-circle-card') || input.closest('.okr-side-card');
+        if(!card) return;
+
+        card.classList.remove('c-red', 'c-yellow', 'c-green');
+        
+        if (val >= 0 && val <= 3) {
+            card.classList.add('c-red');
+            if(card.classList.contains('okr-side-card')) card.style.borderColor = '#e74c3c';
+        } else if (val >= 4 && val <= 6) {
+            card.classList.add('c-yellow');
+            if(card.classList.contains('okr-side-card')) card.style.borderColor = '#f1c40f';
+        } else if (val >= 7 && val <= 10) {
+            card.classList.add('c-green');
+            if(card.classList.contains('okr-side-card')) card.style.borderColor = '#27ae60';
+        }
+    }
+
+    function addKR(btn) {
+        let krSection = btn.closest('.kr-section');
+        let flexContainer = krSection.querySelector('.kr-grid');
+        
+        if(!flexContainer) {
+            alert("ไม่พบพื้นที่สำหรับสร้าง KR ย่อยครับ");
+            return;
+        }
+
+        let newKR = document.createElement('div');
+        newKR.className = 'kr-circle-card c-yellow'; 
+        
+        newKR.innerHTML = `
+            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
+            <div class="conf-header">
+                มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10
+            </div>
+            <div class="kr-circle" contenteditable="true" title="คลิกเพื่อแก้ไข">KR ใหม่... (คลิกเพื่อแก้ไขชื่อ)</div>
+            <div class="kr-data-box">
+                <div>Actual %: <input type="text" value="0%" readonly></div>
+                <div>Diff %: <input type="text" value="0%" readonly></div>
+                <div>บาท/m³: <input type="text" value="0.00" readonly></div>
+            </div>
+            <button class="kr-detail-btn" onclick="window.open('#', '_blank')">🔍 รายละเอียด</button>
+        `;
+        flexContainer.appendChild(newKR);
+    }
+
+    function exportHTML() {
+        let htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        let blob = new Blob([htmlContent], {type: "text/html;charset=utf-8"});
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = "dashboard.html"; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("ดาวน์โหลดไฟล์เสร็จแล้ว! นำไฟล์นี้ไปวางทับไฟล์เดิมได้เลยครับ");
+    }
+
+    let bdChartInstance = null; 
+
+    async function syncData(isAutoLoad = false) {
+        try {
+            let response = await fetch('raw_data.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error("ไม่พบไฟล์ raw_data.html");
+            let htmlText = await response.text();
+            
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(htmlText, 'text/html');
+
+            let allGroupRow = doc.querySelector('tr[data-quarter="ytd"][data-index="10"]'); 
+            if(allGroupRow) {
+                let bdText = allGroupRow.querySelector('.out-pct-breakdown').innerText;
+                let diffText = allGroupRow.querySelector('.out-pct-diff').innerText;
+                let bahtText = allGroupRow.querySelector('.out-baht-m3').innerText;
+
+                document.getElementById('ag_bd').innerText = bdText;
+                document.getElementById('ag_diff').innerText = diffText;
+                document.getElementById('ag_baht').innerText = bahtText;
+
+                // ซิงค์ลงวงกลม OKR ด้วย
+                let agBdCirc = document.getElementById('ag_bd_circle');
+                let agDiffCirc = document.getElementById('ag_diff_circle');
+                let agBahtCirc = document.getElementById('ag_baht_circle');
+                if(agBdCirc) agBdCirc.value = bdText;
+                if(agDiffCirc) {
+                    agDiffCirc.value = diffText;
+                    agDiffCirc.style.color = diffText.includes('-') ? '#ff7675' : '#00e676';
+                }
+                if(agBahtCirc) agBahtCirc.value = bahtText;
+            }
+
+            const machines = [
+                { id: "Chipper", idx: "0" }, { id: "Pz-Flaker", idx: "1" }, { id: "Dryer", idx: "2" },
+                { id: "Screen", idx: "3" }, { id: "Energy", idx: "4" }, { id: "Glue Blender", idx: "5" },
+                { id: "Forming", idx: "6" }, { id: "Press", idx: "7" }, { id: "After press", idx: "8" }
+            ];
+
+            machines.forEach(m => {
+                let row = doc.querySelector(`tr[data-quarter="ytd"][data-index="${m.idx}"]`);
+                if(row) {
+                    let bdElem = document.getElementById('bd_' + m.id);
+                    let diffElem = document.getElementById('diff_' + m.id);
+                    let bahtElem = document.getElementById('baht_' + m.id);
+                    
+                    let diffText = row.querySelector('.out-pct-diff').innerText;
+                    
+                    if(bdElem) bdElem.value = row.querySelector('.out-pct-breakdown').innerText;
+                    if(diffElem) { 
+                        diffElem.value = diffText; 
+                        diffElem.style.color = diffText.includes('-') ? '#ff7675' : '#00e676';
+                    }
+                    if(bahtElem) bahtElem.value = row.querySelector('.out-baht-m3').innerText;
+                }
+            });
+
+            Chart.register(ChartDataLabels);
+            let q_keys = ['q1', 'q2', 'q3', 'q4', 'ytd'];
+            let q_labels = ['ไตรมาส 1', 'ไตรมาส 2', 'ไตรมาส 3', 'ไตรมาส 4', 'ผลสะสม (YTD)'];
+            const colors = ['#e74c3c', '#2ecc71', '#f1c40f', '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#34495e', '#ff9ff3'];
+
+            let datasets = machines.map((m, index) => {
+                let dataPoints = q_keys.map(q => {
+                    let r = doc.querySelector(`tr[data-quarter="${q}"][data-index="${m.idx}"]`);
+                    return r ? parseFloat(r.querySelector('.out-pct-breakdown').innerText.replace('%', '')) || 0 : 0;
+                });
+                return {
+                    label: m.id,
+                    data: dataPoints,
+                    backgroundColor: colors[index],
+                    borderWidth: 1
+                };
+            });
+
+            let ctx = document.getElementById('bdChart').getContext('2d');
+            if(bdChartInstance) bdChartInstance.destroy();
+
+            bdChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: q_labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    layout: { padding: { top: 40 } },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        datalabels: {
+                            anchor: 'end', align: 'end', rotation: -90, offset: 6, color: '#333', 
+                            font: { weight: 'bold', size: 11 },
+                            formatter: function(value) { return value > 0 ? value.toFixed(2) + '%' : ''; }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '% Break down' }, grace: '40%' } }
+                }
+            });
+
+            if(!isAutoLoad) {
+                document.getElementById('last_sync_time').innerText = new Date().toLocaleString('th-TH');
+                alert("✅ ซิงค์ข้อมูล OKR 1 สำเร็จ!");
+            }
+        } catch (error) {
+            if(!isAutoLoad) alert("❌ ข้อมูล OKR 1 ผิดพลาด: " + error.message);
+        }
+    }
+
+    window.addEventListener('load', function() {
+        syncData(true); 
+        syncData2(true); 
+    });
+
+    function addNewOKR() {
+        let container = document.getElementById('okrContainer');
+        if (!container) return;
+
+        let okrHTML = `
+        <div class="okr-item" style="margin-top: 30px; border-top: 2px dashed #bdc3c7; padding-top: 20px;">
+            <div class="okr-main-row" style="display: block; padding-bottom: 15px;">
+                <div class="okr-content" style="display: block; width: 100%;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                        🎯 <span class="okr-title" contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อแก้ไขชื่อ OKR">พิมพ์ชื่อ OKR ใหม่ที่นี่...</span>
+                    </div>
+                    <div style="font-size: 15px; color: #d35400; font-weight: bold; margin-bottom: 12px; padding-left: 25px;">
+                        📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อแก้ไขเป้าหมาย">ควบคุม Break down ... &le; X %</span>
+                    </div>
+                    <div style="margin-bottom: 15px; padding-left: 25px;">
+                        <span class="all-group-badge">
+                            📈 All Group (YTD): Break down <span class="badge-val" contenteditable="true">0.000%</span> | Diff <span class="badge-val" contenteditable="true">0.000%</span> | <span class="badge-val" contenteditable="true">0.00</span> บาท/m3
+                        </span>
+                    </div>
+                </div>
+
+                <div class="okr-actions" style="display: flex; gap: 10px; padding-left: 25px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-graph" onclick="toggleGraph(this)">📊 กราฟ</button>
+                    <button class="btn btn-sync" onclick="syncData()" style="background-color: #f1c40f; color: #2c3e50; border: none;">🔄 ซิงค์ข้อมูล</button>
+                    <button class="btn btn-add" style="background-color: #e67e22;" onclick="window.open('raw_data.html', '_blank')">📊 อัปเดต Raw data</button>
+                    <span style="margin-left: auto; cursor: pointer; font-size: 18px; opacity: 0.7;" title="ลบ OKR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ครั้งที่ 1: ต้องการลบ OKR นี้ใช่หรือไม่?')) { if(confirm('ครั้งที่ 2: ยืนยันการลบอีกครั้ง!')) this.closest('.okr-item').remove(); }">🗑️</span>
+                </div>
+            </div>
+
+            <div class="graph-section" style="display: none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #2c3e50;">📊 กราฟเปรียบเทียบ</h3>
+                <canvas height="100"></canvas>
+            </div>
+
+            <div class="kr-section" style="display: block; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <div class="kr-layout-main">
+                    <div class="okr-side-card c-yellow">
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 18px; margin-bottom: 10px;">🎯 Objective</div>
+                        <div class="conf-header">
+                            มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10
+                        </div>
+                        <div class="kr-circle" contenteditable="true" style="width: 150px; height: 150px; font-size: 13px;">
+                            เป้าหมาย OKR
+                        </div>
+                        <div class="kr-data-box">
+                            <div>Actual %: <input type="text" value="0.000%" readonly></div>
+                            <div>Diff %: <input type="text" value="0.000%" readonly></div>
+                            <div>บาท/m³: <input type="text" value="0.00" readonly></div>
+                        </div>
+                    </div>
+                    <div class="kr-grid"></div>
+                </div>
+                <button class="btn btn-add" style="background-color: #3498db; width: 100%; margin-top: 10px;" onclick="addKR(this)">➕ เพิ่ม KR ย่อย</button>
+            </div>
+        </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', okrHTML);
+    }
+
+    let bdChart2Instance = null;
+
+    async function syncData2(isAutoLoad = false) {
+        try {
+            let response = await fetch('raw_data_okr2.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error("ไม่พบไฟล์ raw_data_okr2.html");
+            let htmlText = await response.text();
+            
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(htmlText, 'text/html');
+            
+            let ytd_bd = doc.getElementById('p_bd_ytd').textContent.trim();
+            let ytd_diff = doc.getElementById('p_diff_ytd').textContent.trim();
+            let ytd_baht = doc.getElementById('baht_ytd').textContent.trim();
+            
+            let bdEl = document.getElementById('ag_bd_2');
+            let diffEl = document.getElementById('ag_diff_2');
+            let bahtEl = document.getElementById('ag_baht_2');
+            
+            if (bdEl && diffEl && bahtEl) {
+                bdEl.innerText = ytd_bd;
+                diffEl.innerText = ytd_diff;
+                bahtEl.innerText = ytd_baht;
+                
+                diffEl.style.color = ytd_diff.includes('-') ? '#c0392b' : '#27ae60';
+                bahtEl.style.color = ytd_baht.includes('-') ? '#c0392b' : '#27ae60';
+            }
+
+            // ซิงค์ลงวงกลม OKR 2 ด้วย
+            let agBdCirc2 = document.getElementById('ag_bd_2_circle');
+            let agDiffCirc2 = document.getElementById('ag_diff_2_circle');
+            let agBahtCirc2 = document.getElementById('ag_baht_2_circle');
+            if(agBdCirc2) agBdCirc2.value = ytd_bd;
+            if(agDiffCirc2) {
+                agDiffCirc2.value = ytd_diff;
+                agDiffCirc2.style.color = ytd_diff.includes('-') ? '#ff7675' : '#00e676';
+            }
+            if(agBahtCirc2) agBahtCirc2.value = ytd_baht;
+
+            let parsePct = (val) => parseFloat(val.replace('%', '')) || 0;
+            let dataPoints = [
+                parsePct(doc.getElementById('p_bd_1').textContent),
+                parsePct(doc.getElementById('p_bd_2').textContent),
+                parsePct(doc.getElementById('p_bd_3').textContent),
+                parsePct(doc.getElementById('p_bd_4').textContent),
+                parsePct(ytd_bd)
+            ];
+
+            Chart.register(ChartDataLabels);
+            let ctx = document.getElementById('bdChart2').getContext('2d');
+            if (bdChart2Instance) bdChart2Instance.destroy();
+            
+            bdChart2Instance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['ไตรมาส 1', 'ไตรมาส 2', 'ไตรมาส 3', 'ไตรมาส 4', 'ผลสะสม (YTD)'],
+                    datasets: [{
+                        label: '% LG Press เครื่องกลขัดข้อง',
+                        data: dataPoints,
+                        backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#9b59b6'],
+                        borderWidth: 1,
+                        maxBarThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    layout: { padding: { top: 30 } },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end', align: 'end', rotation: -90, offset: 6, color: '#333',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: function(value) { return value > 0 ? value.toFixed(3) + '%' : '0.000%'; }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '% LG Press เครื่องกลขัดข้อง' }, grace: '30%' } }
+                }
+            });
+
+            if(!isAutoLoad) alert("✅ ซิงค์ข้อมูล OKR 2 สำเร็จ!");
+            
+        } catch (error) {
+            if(!isAutoLoad) alert("❌ ข้อมูล OKR 2 ผิดพลาด: " + error.message);
+        }
+    }
+
+</script>
+</div>
+
+</body></html>
