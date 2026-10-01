@@ -271,7 +271,7 @@
     </button>
     <div class="header">
         <div class="header-title-group" style="display: flex; align-items: center;">
-    <img src="https://media.istockphoto.com/id/679306036/th/%E0%B9%80%E0%B8%A7%E0%B8%84%E0%B9%80%E0%B8%95%E0%B8%AD%E0%B8%A3%E0%B9%8C/%E0%B8%9E%E0%B8%B7%E0%B9%89%E0%B8%99%E0%B8%AB%E0%B8%A5%E0%B8%B1%E0%B8%87%E0%B8%9C%E0%B8%B4%E0%B8%94%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%94.jpg?s=612x612&w=0&k=20&c=uNFOhaJKwIJAMnOPdTLCEVgRuosg30FpKjO_0nf9UUE=" alt="New Logo" style="height: 45px; width: auto; margin-right: 20px;">
+    <img src="https://media.istockphoto.com/id/679306036/th/%E0%B9%80%E0%B8%A7%E0%B8%84%E0%B9%80%E0%B8%95%E0%B8%AD%E0%B8%A3%E0%B9%8C/%E0%B8%9E%E0%B8%B7%E0%B9%89%E0%B8%99%E0%B8%AB%E0%B8%A5%E0%B8%B1%E0%B8%87%E0%B8%9C%E0%B8%B4%E0%B8%94%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%94.jpg?s=612x612&amp;w=0&amp;k=20&amp;c=uNFOhaJKwIJAMnOPdTLCEVgRuosg30FpKjO_0nf9UUE=" alt="New Logo" style="height: 45px; width: auto; margin-right: 20px;">
     <h1>PB Mechanical Maintenance - OKR Dashboard 2569</h1>
 </div>
         <div class="date">อัปเดตข้อมูลล่าสุด: <span id="last_sync_time">22/8/2569 14:19:17</span></div>
@@ -492,88 +492,7 @@
         </div>
 
         <!-- ==================== OKR Item 2 ==================== -->
-        <div class="okr-item" style="margin-top: 30px; border-top: 2px dashed #bdc3c7; padding-top: 20px;">
-            <div class="okr-main-row" style="display: block; padding-bottom: 15px;">
-                <div class="okr-content" style="display: block; width: 100%;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-                        🎯 <span class="okr-title" contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์ชื่อ OKR">OKR ลดต้นทุนสูญเปล่า ลดบอร์ด LG press&nbsp;</span>
-                    </div>
-                    <div style="font-size: 20px; color: #ffffff; font-weight: bold; margin-bottom: 12px; padding-left: 25px;">
-                        📌 <span contenteditable="true" style="outline: none; cursor: text; border-bottom: 1px dashed #ccc; padding-bottom: 2px;" title="คลิกเพื่อพิมพ์เป้าหมาย">ควบคุมให้มีบอร์ด LG Press ≤ 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง</span>
-                    </div>
-                    <div style="margin-bottom: 15px; padding-left: 25px;">
-                        <span class="all-group-badge">
-                            📈 ผลสะสม (YTD): LG Press <span class="badge-val" id="ag_bd_2">0.000%</span> | Diff <span class="badge-val" id="ag_diff_2">0.000%</span> | <span class="badge-val" id="ag_baht_2">0.00</span> บาท
-                        </span>
-                    </div>
-                </div>
-
-                <div class="okr-actions" style="display: flex; gap: 10px; padding-left: 25px; flex-wrap: wrap; align-items: center;">
-                    <button class="btn btn-graph" onclick="toggleGraph(this)">📊 กราฟ</button>
-                    <button class="btn btn-sync" onclick="syncData2()" style="background-color: #f1c40f; color: #2c3e50; border: none;">🔄 ซิงค์ข้อมูลจาก Raw Data</button>
-                    <button class="btn btn-add" style="background-color: #e67e22;" onclick="window.open('raw_data_okr2.html', '_blank')">📊 อัปเดต Raw data</button>
-                    <span style="margin-left: auto; cursor: pointer; font-size: 18px; opacity: 0.7;" title="ลบ OKR นี้" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="if(confirm('ครั้งที่ 1: ต้องการลบ OKR นี้ใช่หรือไม่?')) { if(confirm('ครั้งที่ 2: ยืนยันการลบอีกครั้ง! (ลบแล้วข้อมูลจะหายไปเลยนะ)')) this.closest('.okr-item').remove(); }">🗑️</span>
-                </div>
-            </div>
-
-            <!-- ซ่อนกราฟไว้ตอนแรก (display: none) -->
-            <div class="graph-section" style="display: none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                <h3 style="margin-top: 0; color: #2c3e50;">📊 กราฟเปรียบเทียบ % บอร์ด LG Press จากเครื่องกลขัดข้องท้ายไลน์ รายไตรมาส</h3>
-                <canvas id="bdChart2" height="100"></canvas>
-            </div>
-
-            <!-- เปิดโชว์ KR วงกลมไว้ตลอด (display: block) -->
-            <div class="kr-section" style="display: block; background: rgb(248, 249, 250); padding: 20px; border-radius: 8px;">
-                <div class="kr-layout-main">
-                    
-                    <!-- 🌟 กล่องวงกลม OKR 2 ด้านซ้าย 🌟 -->
-                    <div class="okr-side-card c-yellow" style="border-color: rgb(241, 196, 15);">
-                        <div style="font-weight: bold; color: #2c3e50; font-size: 18px; margin-bottom: 10px;">🎯 Objective</div>
-                        
-                        <div class="conf-header">
-                            มั่นใจ <input type="number" value="5" min="0" max="10" oninput="updateCircleColor(this)"> /10
-                        </div>
-
-                        <div class="kr-circle" contenteditable="true" style="width: 150px; height: 150px; font-size: 13px;">
-                            ควบคุมให้มีบอร์ด LG Press ≤ 0.1 % จากเครื่องจักรทางกล After press ขัดข้อง
-                        </div>
-                        
-                        <div class="kr-data-box">
-                            <div>Actual %: <input type="text" id="ag_bd_2_circle" value="0.000%" readonly=""></div>
-                            <div>Diff %: <input type="text" id="ag_diff_2_circle" value="0.000%" readonly=""></div>
-                            <div>บาท/m³: <input type="text" id="ag_baht_2_circle" value="0.00" readonly=""></div>
-                        </div>
-
-                        <!-- 🎯 เพิ่มปุ่ม ภาพรวม OKR ตรงนี้และปิดแท็กกล่องซ้ายให้สมบูรณ์ -->
-                        <button class="kr-detail-btn" style="margin-top: 10px; background-color: #2980b9;" onclick="window.open('ใส่ชื่อไฟล์ที่ต้องการลิ้งค์ไป.html', '_blank')">📊 ภาพรวม OKR</button>
-                    </div>
-
-                    <!-- 🌟 Grid สำหรับ KR 3 แถว 🌟 -->
-                    <div class="kr-grid">
-                        
-                        <!-- OKR2 KR 1 -->
-                        <div class="kr-circle-card c-yellow">
-                            <span style="position: absolute; top: 8px; right: 8px; cursor: pointer; font-size: 14px; opacity: 0.5;" title="ลบ" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="if(confirm('ลบ KR นี้?')) this.closest('.kr-circle-card').remove();">🗑️</span>
-                            <div class="conf-header">มั่นใจ <input type="number" value="6" min="0" max="10" oninput="updateCircleColor(this)"> /10</div>
-                            <div class="kr-circle" contenteditable="true">
-                                KR1 ปรับปรุงการตรวจเช็คเครื่องจักร After press ประจำวัน
-                            </div>
-                            <div class="kr-data-box">
-                                <div>Actual %: <input type="text" value="0%" readonly=""></div>
-                                <div>Diff %: <input type="text" value="0%" readonly=""></div>
-                                <div>บาท/m³: <input type="text" value="0.00" readonly=""></div>
-                            </div>
-                            <button class="kr-detail-btn" onclick="window.open('kr1_okr2_details.html', '_blank')">🔍 รายละเอียด</button>
-                        </div>
-
-                        <!-- OKR2 KR 2 -->
-                        
-
-                    </div>
-                </div>
-                <button class="btn btn-add" style="background-color: #3498db; width: 100%; margin-top: 10px;" onclick="addKR(this)">➕ เพิ่ม KR ย่อย</button>
-            </div>
-        </div>
+        
 
     </div>
 
